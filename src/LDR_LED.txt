@@ -1,0 +1,66 @@
+#include <Arduino.h>
+#include <FreeRTOSConfig.h>
+
+// Pin Definitions
+#define LAMP1 4
+#define LAMP2 5
+#define LAMP3 19
+#define LDR_PIN 34 // Pin analog untuk LDR
+
+// Global Variables
+bool automationMode = true; // Mode otomatis
+
+// Function to control lighting based on LDR
+void controlLighting()
+{
+  int ldrValue = analogRead(LDR_PIN); // Membaca nilai LDR (0-4095 pada ESP32)
+
+  if (automationMode)
+  {
+    // Jika ruangan sangat terang, matikan semua lampu
+    if (ldrValue < 100)
+    {                        // Ambang batas terang
+      analogWrite(LAMP1, 0); // Lampu 1 mati
+      analogWrite(LAMP2, 0); // Lampu 2 mati
+      analogWrite(LAMP3, 0); // Lampu 3 mati
+      Serial.println("Lampu mati karena ruangan sangat terang.");
+    }
+    else
+    {
+      // Jika ruangan redup, sesuaikan kecerahan lampu
+      int brightness = map(ldrValue, 0, 4095, 0, 255); // Inversi nilai LDR untuk brightness
+      analogWrite(LAMP1, brightness);                  // Lampu 1
+      analogWrite(LAMP2, brightness);                  // Lampu 2
+      analogWrite(LAMP3, brightness);                  // Lampu 3
+      Serial.println("Brightness lampu: " + String(brightness));
+    }
+  }
+}
+
+// FreeRTOS Task for Lighting
+void TaskLighting(void *pvParameters)
+{
+  while (1)
+  {
+    controlLighting();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
+void setup()
+{
+  Serial.begin(115200);
+
+  // Pin Modes
+  pinMode(LAMP1, OUTPUT);
+  pinMode(LAMP2, OUTPUT);
+  pinMode(LAMP3, OUTPUT);
+
+  // FreeRTOS Task Creation
+  xTaskCreate(TaskLighting, "Lighting Task", 1000, NULL, 1, NULL);
+}
+
+void loop()
+{
+  // Empty loop; tasks are handled by FreeRTOS
+}
