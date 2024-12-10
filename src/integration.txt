@@ -117,7 +117,7 @@ void vSetPowerTask(void *pvParameters)
     }
     else
     {
-      sprintf(buff, "People is more than equal to %d (Power: %.2f)", people, formula);
+      sprintf(buff, "ZENKAIII! People is more than equal to %d (Power: %.2f)", people, formula);
       Serial.println(buff);
     }
 

@@ -79,7 +79,7 @@ void vSetPowerTask(void *pvParameters)
       exit_changed = false;
     }
 
-    int formula = ((float)people / 5) * 255;
+    float formula = (((float)people / 5) * 200) + 50;
 
     formula = !IR_DC_MODE ? formula : IR_DC_VALUE;
 
@@ -96,7 +96,7 @@ void vSetPowerTask(void *pvParameters)
       Serial.println(buff);
     }
 
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -111,7 +111,7 @@ void setup()
   // Blynk.syncVirtual(IR_DC_MODE_VPIN);
   // Blynk.syncVirtual(IR_DC_VALUE_VPIN);
 
-  xSetPowerTask = xTaskCreate(vSetPowerTask, "Set Power", 4096, NULL, 0, NULL);
+  xSetPowerTask = xTaskCreate(vSetPowerTask, "Set Power", 8192, NULL, 0, NULL);
 
   pinMode(INPUT_ENTER, INPUT);
   pinMode(INPUT_EXIT, INPUT);
@@ -137,4 +137,7 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   // Blynk.run();
+
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
 }
