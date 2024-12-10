@@ -9,17 +9,21 @@
 
 #include <Arduino.h>
 #include <FreeRTOSConfig.h>
-#include <ESP32Servo.h>
+// #include <ESP32Servo.h>
 // #include <BlynkSimpleEsp32.h>
 
 #define INPUT_ENTER 23
 #define INPUT_EXIT 22
 
-#define PHYSICAL_BUILD 21
+#define IN1 26
+#define IN2 25
+#define EN1 27
 
-#define OUTPUT_POWER 25
+#define PWM_CHN 0     // Channel 0
+#define LEDC_TIMER 0  // Timer 0
+#define PWM_RES 8     // 8-bit resolution (0-255)
+#define PWM_FREQ 1000 // Frequency in Hz (5 kHz)
 
-Servo servo;
 BaseType_t xSetPowerTask;
 
 int people = 0;
@@ -75,11 +79,11 @@ void vSetPowerTask(void *pvParameters)
       exit_changed = false;
     }
 
-    int formula = ((float)people / 5) * 180;
+    int formula = ((float)people / 5) * 255;
 
     formula = !IR_DC_MODE ? formula : IR_DC_VALUE;
 
-    servo.write(formula);
+    ledcWrite(PWM_CHN, formula);
 
     if (people < 5)
     {
@@ -109,15 +113,24 @@ void setup()
 
   xSetPowerTask = xTaskCreate(vSetPowerTask, "Set Power", 4096, NULL, 0, NULL);
 
-  ESP32PWM::allocateTimer(0);
-  ESP32PWM::allocateTimer(1);
-  ESP32PWM::allocateTimer(2);
-  ESP32PWM::allocateTimer(3);
-  servo.setPeriodHertz(50);
-  servo.attach(PHYSICAL_BUILD);
-
   pinMode(INPUT_ENTER, INPUT);
   pinMode(INPUT_EXIT, INPUT);
+
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  // pinMode(LEDC_PIN, OUTPUT);
+
+  if (!ledcSetup(PWM_CHN, PWM_FREQ, PWM_RES))
+  {
+    Serial.println("LEDC setup failed!");
+    while (1)
+      ; // Halt if setup fails
+  }
+
+  ledcAttachPin(EN1, PWM_CHN);
+
+  ledcWrite(PWM_CHN, 180);
+
 }
 
 void loop()
